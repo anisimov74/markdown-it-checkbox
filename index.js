@@ -1,68 +1,34 @@
-var _, checkboxReplace;
+/*global module */
 
-_ = require('underscore');
-
-checkboxReplace = function(md, options, Token) {
+module.exports = function(md, options) {
   "use strict";
-  var arrayReplaceAt, createTokens, defaults, lastId, pattern, splitTextToken;
-  arrayReplaceAt = md.utils.arrayReplaceAt;
-  lastId = 0;
-  defaults = {
-    divWrap: false,
-    divClass: 'checkbox',
-    idPrefix: 'checkbox'
+  md.core.ruler.push("checkbox", checkboxReplace(md, options));
+};
+
+
+function checkboxReplace(md, options) {
+  "use strict";
+  var pattern = /\[(X|V|\s|\_|\-)\]\s(.*)/i;
+  var position = 0;
+  var defaults = {
+    prefix: 'checkbox-'
   };
-  options = _.extend(defaults, options);
-  pattern = /\[(X|V|\s|\_|\-)\]\s(.*)/i;
-  createTokens = function(checked, label, Token) {
-    var id, nodes, token;
-    nodes = [];
+  options = Object.assign(defaults, options);
 
-    /**
-     * <div class="checkbox">
-     */
-    if (options.divWrap) {
-      token = new Token("checkbox_open", "div", 1);
-      token.attrs = [["class", options.divClass]];
-      nodes.push(token);
-    }
-
-    /**
-     * <input type="checkbox" id="checkbox{n}" checked="true">
-     */
-    id = options.idPrefix + lastId;
-    lastId += 1;
-    token = new Token("checkbox_input", "input", 0);
-    token.attrs = [["type", "checkbox"], ["id", id]];
-    if (checked === true) {
-      token.attrs.push(["checked", "true"]);
-    }
-    nodes.push(token);
-
-    /**
-     * <label for="checkbox{n}">
-     */
-    token = new Token("label_open", "label", 1);
-    token.attrs = [["for", id]];
-    nodes.push(token);
-
-    /**
-     * content of label tag
-     */
-    token = new Token("text", "", 0);
+  function createTokens(checked, label, Token) {
+    var token = new Token("checkbox_open", "", 0);
     token.content = label;
-    nodes.push(token);
+    token.attrs = [
+      ["type", "checkbox"],
+      ["id", options.prefix + position],
+      ["checked", checked.toString()],
+      ["position", position]
+    ];
+    position += 1;
+    return [token];
+  }
 
-    /**
-     * closing tags
-     */
-    nodes.push(new Token("label_close", "label", -1));
-    if (options.divWrap) {
-      nodes.push(new Token("checkbox_close", "div", -1));
-    }
-    return nodes;
-  };
-  splitTextToken = function(original, Token) {
+  function splitTextToken(original, Token) {
     var checked, label, matches, text, value;
     text = original.content;
     matches = text.match(pattern);
@@ -76,7 +42,8 @@ checkboxReplace = function(md, options, Token) {
       checked = true;
     }
     return createTokens(checked, label, Token);
-  };
+  }
+
   return function(state) {
     var blockTokens, i, j, l, token, tokens;
     blockTokens = state.tokens;
@@ -91,18 +58,10 @@ checkboxReplace = function(md, options, Token) {
       i = tokens.length - 1;
       while (i >= 0) {
         token = tokens[i];
-        blockTokens[j].children = tokens = arrayReplaceAt(tokens, i, splitTextToken(token, state.Token));
+        blockTokens[j].children = tokens = md.utils.arrayReplaceAt(tokens, i, splitTextToken(token, state.Token));
         i--;
       }
       j++;
     }
   };
-};
-
-
-/*global module */
-
-module.exports = function(md, options) {
-  "use strict";
-  md.core.ruler.push("checkbox", checkboxReplace(md, options));
-};
+}
