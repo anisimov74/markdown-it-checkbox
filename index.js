@@ -21,7 +21,7 @@ function checkboxReplace(md, options) {
     token.attrs = [
       ["type", "checkbox"],
       ["id", options.prefix + position],
-      ["checked", checked.toString()],
+      ["checked", checked],
       ["position", position]
     ];
     position += 1;
