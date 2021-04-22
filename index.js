@@ -9,7 +9,7 @@ module.exports = function(md, options) {
 function checkboxReplace(md, options) {
   "use strict";
   var position;
-  var pattern = /\[(X|V|\s|\_|\-)\]\s(.*)/i;
+  var pattern = /\[(X|V|\s|\_|\-)\](.*)/i;
   var defaults = {
     prefix: 'checkbox-'
   };
